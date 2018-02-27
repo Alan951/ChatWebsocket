@@ -11,18 +11,18 @@ import javax.websocket.Session;
  *
  * @author Jorge
  */
-public class Usuario {
+public class User {
     private String nombre;
     private String avatarURL;
     private Session session;
 
-    public Usuario(){}
+    public User(){}
     
-    public Usuario(Session session){
+    public User(Session session){
         setSession(session);
     }
     
-    public Usuario(String nombre, String avatar) {
+    public User(String nombre, String avatar) {
         this.nombre = nombre;
         this.avatarURL = avatar;
     }

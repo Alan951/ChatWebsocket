@@ -19,7 +19,7 @@ import javax.websocket.OnMessage;
 import javax.websocket.OnOpen;
 import javax.websocket.Session;
 import javax.websocket.server.ServerEndpoint;
-import mx.jalan.Model.Usuario;
+import mx.jalan.Model.User;
 
 /**
  *
@@ -32,20 +32,28 @@ public class ChatWebSocketServer {
     @Inject
     private ChatSessionHandler sessionHandler;
     
+    @Inject
+    private UserService userService;
+    
+    Logger log = Logger.getLogger(this.getClass().toString());
+    
     @OnOpen
     public void open(Session session){
-        Usuario usr = new Usuario();
+        log.info("New User");
+        System.out.println("New User");
+        User usr = new User();
         usr.setSession(session);
-        System.out.println("New User!");
-        sessionHandler.addUser(usr, session);
+        
+        userService.addUser(usr, session);
     }
     
     @OnClose
     public void close(Session session){
-        System.out.println("[DG - OnClose]: "+session);
-        Usuario usr = sessionHandler.existsSession(session);
+        log.info("Close connection: "+session);
+        //System.out.println("[DG - OnClose]: "+session);
+        User usr = userService.existsSession(session);
         if(usr != null) sessionHandler.createMsgFromServer("El usuario: \""+usr.getNombre()+"\" ha salido del chat.");
-        sessionHandler.removeSession(session);
+        userService.removeSession(session);
     }
     
     @OnError
@@ -61,18 +69,18 @@ public class ChatWebSocketServer {
             System.out.println("[DG - OnMessage]: "+jsonMsg);
             
             if("newUsr".equals(jsonMsg.getString("action"))){
-                Usuario usr;
+                User usr;
                 
                 String nombre = jsonMsg.getString("nombre");
                 
                 String avatar = !jsonMsg.isNull("avatarURL") ? jsonMsg.getString("avatarURL") : null;
                 
-                usr = new Usuario();
+                usr = new User();
                 if(avatar != null) usr.setAvatar(avatar);
                 usr.setNombre(nombre);
                 usr.setSession(session);
                 
-                sessionHandler.addUser(usr, session);
+                userService.addUser(usr, session);
             }
             
             if("msg".equals(jsonMsg.getString("action"))){

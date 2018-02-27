@@ -6,17 +6,16 @@
 package mx.jalan.websocket;
 
 import java.io.IOException;
-import java.math.BigDecimal;
 import java.util.HashSet;
 import java.util.Set;
 import javax.enterprise.context.ApplicationScoped;
-import javax.json.Json;
-import javax.json.JsonArray;
+import javax.inject.Inject;
 import javax.json.JsonArrayBuilder;
 import javax.json.JsonObject;
 import javax.json.spi.JsonProvider;
 import javax.websocket.Session;
-import mx.jalan.Model.Usuario;
+import mx.jalan.Model.User;
+import mx.jalan.WebSocket.UserService;
 
 /**
  *
@@ -25,32 +24,27 @@ import mx.jalan.Model.Usuario;
 @ApplicationScoped
 public class ChatSessionHandler {
     
-    private final Set<Usuario> users = new HashSet<>();
+    //private final Set<User> users = new HashSet<>();
     
-    public void addUser(Usuario usuario, Session session){
-        if(existsSession(session) == null){
-            users.add(usuario);
+    @Inject
+    private UserService userService;
+    
+    public void addUser(User usuario, Session session){
+        if(userService.existsSession(session) == null){
+            userService.addUser(usuario);
         }else{
-            removeSession(session);
-            users.add(usuario);
+            userService.removeUser(session);
+            userService.addUser(usuario);
             if(usuario.getNombre() != null && !usuario.getNombre().trim().isEmpty())
                 createMsgFromServer("Bienvenido "+usuario.getNombre()+"!!!");
         }
-    }
-    
-    public void removeUser(Usuario usuario){
-        users.remove(usuario);
-    }
-    
-    public void removeSession(Session session){
-        users.removeIf(usr -> usr.getSession() == session);
     }
 
     public void sendMessage(JsonObject msg, Session session) {
         if(msg.getString("destin").equals("all")){
             sendBroadcastSession(msg, session);
         }else{
-            Usuario usr = existsUser(msg.getString("destin"));
+            User usr = userService.existsUser(msg.getString("destin"));
             
             if(usr != null){
                 sendUnicastSession(msg, usr.getSession());
@@ -61,10 +55,10 @@ public class ChatSessionHandler {
     }
     
     public void createUpdateMessage(Session session){
-        Usuario sourceUsr = existsSession(session);
+        User sourceUsr = userService.existsSession(session);
         JsonArrayBuilder jarr = JsonProvider.provider().createArrayBuilder();
         
-        users.forEach((usr) -> {
+        userService.getUsersList().forEach((usr) -> {
             if(sourceUsr != usr){
                 JsonObject jsO = JsonProvider.provider().createObjectBuilder()
                         .add("usuario", usr.getNombre()).add("avatar", JsonObject.NULL).build();
@@ -80,7 +74,7 @@ public class ChatSessionHandler {
     
     public void sendBroadcastSession(JsonObject msg, Session session){
         System.out.println("[DG - Send Broadcast]: "+msg.toString());
-        users.forEach((usr) -> {
+        userService.getUsersList().forEach((usr) -> {
             if(session == null || usr.getSession() != session){
                 if(usr.getSession().isOpen())
                     sendMessageSession(msg, usr.getSession());
@@ -97,29 +91,9 @@ public class ChatSessionHandler {
         try{
             session.getBasicRemote().sendText(msg.toString());
         }catch(IOException e){
-            users.removeIf(usr -> usr.getSession() == session);
+            userService.getUsersList().removeIf(usr -> usr.getSession() == session);
             e.printStackTrace();
         }
-    }
-    
-    public Usuario existsUser(String nombre){
-        for(Usuario usr : users){
-            if(usr.getNombre().equalsIgnoreCase(nombre)){
-                return usr;
-            }
-        }
-        
-        return null;
-    }
-    
-    public Usuario existsSession(Session session){
-        for(Usuario usr : users){
-            if(usr.getSession().equals(session)){
-                return usr;
-            }
-        }
-        
-        return null;
     }
     
     public void createMsgFromServer(String msg){
