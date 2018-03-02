@@ -12,25 +12,47 @@ import java.time.LocalDateTime;
  * @author Ck
  */
 public class Message {
+    private int code;
+    private String action;
     private String message;
-    private User userCreated;
+    private User userSource;
     private User userDestination;
     private EncryptionProperties encryptProps;
     private LocalDateTime timestamp;
 
-    public Message(String message, User userCreated, User userDestination, EncryptionProperties encryptProps, LocalDateTime timestamp) {
+    public Message(String action, String message, User userSource, User userDestination, EncryptionProperties encryptProps, LocalDateTime timestamp, int code) {
+        this.action = action;
         this.message = message;
-        this.userCreated = userCreated;
+        this.userSource = userSource;
         this.userDestination = userDestination;
         this.encryptProps = encryptProps;
         this.timestamp = timestamp;
+        this.code = code;
     }
 
-    public Message(String message, User userCreated, EncryptionProperties encryptProps, LocalDateTime timestamp) {
+    public Message(String action, String message, User userSource, EncryptionProperties encryptProps, LocalDateTime timestamp, int code) {
+        this.action = action;
         this.message = message;
-        this.userCreated = userCreated;
+        this.userSource = userSource;
         this.encryptProps = encryptProps;
         this.timestamp = timestamp;
+        this.code = code;
+    }
+    
+    public void setAction(String action){
+        this.action = action;
+    }
+    
+    public String getAction(){
+        return action;
+    }
+    
+    public void setCode(int code){
+        this.code = code;
+    }
+    
+    public int getCode(){
+        return this.code;
     }
     
     public String getMessage() {
@@ -42,11 +64,11 @@ public class Message {
     }
 
     public User getUserCreated() {
-        return userCreated;
+        return userSource;
     }
 
-    public void setUserCreated(User userCreated) {
-        this.userCreated = userCreated;
+    public void setUserCreated(User userSource) {
+        this.userSource = userSource;
     }
 
     public User getUserDestination() {
@@ -75,6 +97,6 @@ public class Message {
 
     @Override
     public String toString() {
-        return "Message{" + "message=" + message + ", userCreated=" + userCreated + ", userDestination=" + userDestination + ", encryptProps=" + encryptProps + ", timestamp=" + timestamp + '}';
+        return "Message{" + "code=" + code + ", action=" + action + ", message=" + message + ", userSource=" + userSource + ", userDestination=" + userDestination + ", encryptProps=" + encryptProps + ", timestamp=" + timestamp + '}';
     }
 }
