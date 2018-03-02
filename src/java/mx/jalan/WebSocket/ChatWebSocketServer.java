@@ -6,6 +6,7 @@
 //package mx.jalan.websocket;
 package mx.jalan.WebSocket;
 
+import mx.jalan.WebSocket.services.UserService;
 import java.io.IOException;
 import java.io.StringReader;
 import java.util.logging.Level;

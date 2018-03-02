@@ -6,6 +6,7 @@
 package mx.jalan.Model;
 
 import java.time.LocalDateTime;
+import javax.websocket.Session;
 
 /**
  *
@@ -17,9 +18,17 @@ public class Message {
     private String message;
     private User userSource;
     private User userDestination;
+    private transient Session sessionSource;
+    private transient Session sessionDestination;
     private EncryptionProperties encryptProps;
     private LocalDateTime timestamp;
 
+    // Default constructor
+    public Message(){}
+    
+    /*
+        Constructor to create message from user to other user by private message
+    */
     public Message(String action, String message, User userSource, User userDestination, EncryptionProperties encryptProps, LocalDateTime timestamp, int code) {
         this.action = action;
         this.message = message;
@@ -30,6 +39,9 @@ public class Message {
         this.code = code;
     }
 
+    /*
+        Constructor to create message from user to all
+    */
     public Message(String action, String message, User userSource, EncryptionProperties encryptProps, LocalDateTime timestamp, int code) {
         this.action = action;
         this.message = message;
@@ -37,6 +49,17 @@ public class Message {
         this.encryptProps = encryptProps;
         this.timestamp = timestamp;
         this.code = code;
+    }
+    
+    /*
+        Constructor to create message from server
+    */
+    public Message(String action, String message, EncryptionProperties encryptProps, int code){
+        this.action = action;
+        this.message = message;
+        this.encryptProps = encryptProps;
+        this.code = code;
+        
     }
     
     public void setAction(String action){
@@ -63,11 +86,11 @@ public class Message {
         this.message = message;
     }
 
-    public User getUserCreated() {
+    public User getUserSource() {
         return userSource;
     }
 
-    public void setUserCreated(User userSource) {
+    public void setUserSource(User userSource) {
         this.userSource = userSource;
     }
 
@@ -93,6 +116,22 @@ public class Message {
 
     public void setTimestamp(LocalDateTime timestamp) {
         this.timestamp = timestamp;
+    }
+
+    public Session getSessionSource() {
+        return sessionSource;
+    }
+
+    public void setSessionSource(Session sessionSource) {
+        this.sessionSource = sessionSource;
+    }
+
+    public Session getSessionDestination() {
+        return sessionDestination;
+    }
+
+    public void setSessionDestination(Session sessionDestination) {
+        this.sessionDestination = sessionDestination;
     }
 
     @Override

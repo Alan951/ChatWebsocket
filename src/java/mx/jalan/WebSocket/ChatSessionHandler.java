@@ -5,6 +5,7 @@
  */
 package mx.jalan.WebSocket;
 
+import mx.jalan.WebSocket.services.UserService;
 import java.io.IOException;
 import javax.enterprise.context.ApplicationScoped;
 import javax.inject.Inject;
@@ -13,7 +14,7 @@ import javax.json.JsonObject;
 import javax.json.spi.JsonProvider;
 import javax.websocket.Session;
 import mx.jalan.Model.User;
-import mx.jalan.WebSocket.UserService;
+import mx.jalan.Model.Message;
 
 /**
  *
@@ -31,6 +32,7 @@ public class ChatSessionHandler {
         }else{
             if(usuario.getNombre() != null && !usuario.getNombre().trim().isEmpty())
                 createMsgFromServer("Bienvenido "+usuario.getNombre()+"!!!");
+            
         }
     }
 
@@ -79,12 +81,48 @@ public class ChatSessionHandler {
         });
     }
     
+    public void sendBroadcastSession(Message msg, Session session){
+        System.out.println("[DG - Send Broadcast]: "+msg.toString());
+        
+        if(userService.getUsersList().size() == 0)  return;
+        
+        userService.getUsersList().forEach((usr) -> {
+            if(session == null || usr.getSession() != session){
+                if(usr.getSession().isOpen() && !usr.getNombre().isEmpty())
+                    sendMessageSession(msg, usr.getSession());
+            }
+        });
+    }
+    
     public void sendUnicastSession(JsonObject msg, Session session){
         System.out.println("[DG - Send Unicast]: "+msg.toString());
         sendMessageSession(msg, session);
     }
     
-    public void sendMessageSession(JsonObject msg, Session session){
+    public void sendUnicastSession(Message msg, Session session){
+        System.out.println("[DG - Send Unicast]: "+msg.toString());
+        sendMessageSession(msg, session);
+    }
+    
+    /*
+        Send message to one session when message have the session destination.
+    */
+    public void sendUnicastSession(Message msg){
+        sendMessageSession(msg, msg.getSessionDestination());
+    }
+    
+    private void sendMessageSession(JsonObject msg, Session session){
+        try{
+            session.getBasicRemote().sendText(msg.toString());
+        }catch(IOException e){
+            userService.getUsersList().removeIf(usr -> usr.getSession() == session);
+            e.printStackTrace();
+        }
+    }
+    
+    public void sendMessageSession(Message msg, Session session){
+        //TODO: Convert msg to json string
+        
         try{
             session.getBasicRemote().sendText(msg.toString());
         }catch(IOException e){
@@ -103,6 +141,10 @@ public class ChatSessionHandler {
         sendBroadcastSession(msgjs, null);
     }
     
+    public void createMsgFromServer(Message message){
+        
+    }
+    
     public void createErrorMessage(String msg, Session session, int code){
         JsonProvider provider = JsonProvider.provider();
         JsonObject msgError = provider.createObjectBuilder()
@@ -111,5 +153,9 @@ public class ChatSessionHandler {
                 .add("code", code).build();
         
         sendUnicastSession(msgError, session);
+    }
+    
+    public void createErrorMessageN(String msg, Session session, int code){
+        
     }
 }
