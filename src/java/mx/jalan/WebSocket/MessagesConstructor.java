@@ -15,11 +15,20 @@ import mx.jalan.Model.Message;
 public class MessagesConstructor {
     public static Message constructErrorMessage(String msg, Session session, int code){
         Message msgError = new Message();
-        msgError.setAction("error");
+        msgError.setAction(MessageHelper.ERROR_MESSAGE);
         msgError.setMessage(msg);
         msgError.setSessionDestination(session);
         msgError.setCode(code);
         
         return msgError;
+    }
+    
+    public static Message constructServerMessage(String message){
+        Message msg = new Message();
+        msg.setAction(MessageHelper.SIMPLE_MESSAGE);
+        msg.setMessage(message);
+        msg.setCode(200);
+        
+        return msg;
     }
 }

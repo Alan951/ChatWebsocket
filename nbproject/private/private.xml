@@ -2,6 +2,13 @@
 <project-private xmlns="http://www.netbeans.org/ns/project-private/1">
     <editor-bookmarks xmlns="http://www.netbeans.org/ns/editor-bookmarks/2" lastBookmarkId="0"/>
     <open-files xmlns="http://www.netbeans.org/ns/projectui-open-files/2">
-        <group/>
+        <group>
+            <file>file:/C:/Users/Ck/Documents/workbench%20dev/ChatWebsocket/src/java/mx/jalan/WebSocket/ChatSessionHandler.java</file>
+            <file>file:/C:/Users/Ck/Documents/workbench%20dev/ChatWebsocket/src/java/mx/jalan/Model/Message.java</file>
+            <file>file:/C:/Users/Ck/Documents/workbench%20dev/ChatWebsocket/src/java/mx/jalan/Model/User.java</file>
+            <file>file:/C:/Users/Ck/Documents/workbench%20dev/ChatWebsocket/src/java/mx/jalan/WebSocket/MessagesConstructor.java</file>
+            <file>file:/C:/Users/Ck/Documents/workbench%20dev/ChatWebsocket/src/java/mx/jalan/WebSocket/MessageHelper.java</file>
+            <file>file:/C:/Users/Ck/Documents/workbench%20dev/ChatWebsocket/src/java/mx/jalan/WebSocket/ChatWebSocketServer.java</file>
+        </group>
     </open-files>
 </project-private>

@@ -50,6 +50,19 @@ public class ChatSessionHandler {
         }
     }
     
+    public void sendMessage(Message msg){
+        if(msg.getUserDestination() == null){ //Message to all
+            sendBroadcastSession(msg, msg.getSessionSource());
+        }else{
+            if(userService.existsUser(msg.getUserDestination()) != null){
+                sendUnicastSession(msg);
+            }else{
+                MessagesConstructor
+                        .constructErrorMessage("El usuario " + msg.getUserDestination().getNombre() + " no existe", msg.getUserSource().getSession(), MessageHelper.USER_NOT_FOUND_CODE);
+            }
+        }
+    }
+    
     public void createUpdateMessage(Session session){
         User sourceUsr = userService.existsSession(session);
         JsonArrayBuilder jarr = JsonProvider.provider().createArrayBuilder();
@@ -121,7 +134,7 @@ public class ChatSessionHandler {
     }
     
     public void sendMessageSession(Message msg, Session session){
-        //TODO: Convert msg to json string
+        //TODO: Convert msg to json string and before send set timestamp now
         
         try{
             session.getBasicRemote().sendText(msg.toString());
@@ -153,9 +166,5 @@ public class ChatSessionHandler {
                 .add("code", code).build();
         
         sendUnicastSession(msgError, session);
-    }
-    
-    public void createErrorMessageN(String msg, Session session, int code){
-        
     }
 }

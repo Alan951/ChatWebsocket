@@ -16,7 +16,7 @@ import javax.websocket.Session;
 public class User {
     private String nombre;
     private String avatarURL;
-    private Session session;
+    private transient Session session;
 
     public User(){}
     
