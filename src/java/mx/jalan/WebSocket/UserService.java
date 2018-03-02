@@ -5,8 +5,12 @@
  */
 package mx.jalan.WebSocket;
 
+import java.io.Serializable;
 import java.util.HashSet;
 import java.util.Set;
+import javax.annotation.PostConstruct;
+import javax.enterprise.context.Dependent;
+import javax.enterprise.context.ApplicationScoped;
 import javax.websocket.Session;
 import mx.jalan.Model.User;
 
@@ -14,11 +18,10 @@ import mx.jalan.Model.User;
  *
  * @author Ck
  */
+@ApplicationScoped
 public class UserService {
     
     private final Set<User> users = new HashSet<>();
-    
-    public UserService(){}
     
     public void addUser(User user){
         users.add(user);
@@ -50,7 +53,7 @@ public class UserService {
     
     public User existsUser(String userName){
         for(User user : this.users){
-            if(user.getNombre().equals(userName)){
+            if(user.getNombre() != null && user.getNombre().equals(userName)){
                 return user;
             }
         }

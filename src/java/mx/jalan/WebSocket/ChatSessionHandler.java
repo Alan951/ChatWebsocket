@@ -3,11 +3,9 @@
  * To change this template file, choose Tools | Templates
  * and open the template in the editor.
  */
-package mx.jalan.websocket;
+package mx.jalan.WebSocket;
 
 import java.io.IOException;
-import java.util.HashSet;
-import java.util.Set;
 import javax.enterprise.context.ApplicationScoped;
 import javax.inject.Inject;
 import javax.json.JsonArrayBuilder;
@@ -23,18 +21,14 @@ import mx.jalan.WebSocket.UserService;
  */
 @ApplicationScoped
 public class ChatSessionHandler {
-    
-    //private final Set<User> users = new HashSet<>();
-    
+
     @Inject
     private UserService userService;
     
-    public void addUser(User usuario, Session session){
-        if(userService.existsSession(session) == null){
-            userService.addUser(usuario);
+    public void addUser(User usuario){
+        if(userService.existsSession(usuario.getSession()) == null){ 
+            userService.addUser(usuario); //Agrega la session
         }else{
-            userService.removeUser(session);
-            userService.addUser(usuario);
             if(usuario.getNombre() != null && !usuario.getNombre().trim().isEmpty())
                 createMsgFromServer("Bienvenido "+usuario.getNombre()+"!!!");
         }
@@ -49,7 +43,7 @@ public class ChatSessionHandler {
             if(usr != null){
                 sendUnicastSession(msg, usr.getSession());
             }else{
-                createErrorMessage("El usuario "+msg.getString("destin")+" no existe", session);
+                createErrorMessage("El usuario "+msg.getString("destin")+" no existe", session, 404);
             }
         }
     }
@@ -74,9 +68,12 @@ public class ChatSessionHandler {
     
     public void sendBroadcastSession(JsonObject msg, Session session){
         System.out.println("[DG - Send Broadcast]: "+msg.toString());
+        
+        if(userService.getUsersList().size() == 0)  return;
+        
         userService.getUsersList().forEach((usr) -> {
             if(session == null || usr.getSession() != session){
-                if(usr.getSession().isOpen())
+                if(usr.getSession().isOpen() && !usr.getNombre().isEmpty())
                     sendMessageSession(msg, usr.getSession());
             }
         });
@@ -106,11 +103,12 @@ public class ChatSessionHandler {
         sendBroadcastSession(msgjs, null);
     }
     
-    public void createErrorMessage(String msg, Session session){
+    public void createErrorMessage(String msg, Session session, int code){
         JsonProvider provider = JsonProvider.provider();
         JsonObject msgError = provider.createObjectBuilder()
                 .add("action", "msgError")
-                .add("content", msg).build();
+                .add("content", msg)
+                .add("code", code).build();
         
         sendUnicastSession(msgError, session);
     }

@@ -5,12 +5,14 @@
  */
 package mx.jalan.Model;
 
+import javax.enterprise.inject.Model;
 import javax.websocket.Session;
 
 /**
  *
  * @author Jorge
  */
+@Model
 public class User {
     private String nombre;
     private String avatarURL;

@@ -3,16 +3,20 @@
  * To change this template file, choose Tools | Templates
  * and open the template in the editor.
  */
-package mx.jalan.websocket;
+//package mx.jalan.websocket;
+package mx.jalan.WebSocket;
 
+import java.io.IOException;
 import java.io.StringReader;
 import java.util.logging.Level;
 import java.util.logging.Logger;
-import javax.faces.bean.ApplicationScoped;
+import javax.annotation.PostConstruct;
+import javax.enterprise.context.ApplicationScoped;
 import javax.inject.Inject;
 import javax.json.Json;
 import javax.json.JsonObject;
 import javax.json.JsonReader;
+import javax.websocket.CloseReason;
 import javax.websocket.OnClose;
 import javax.websocket.OnError;
 import javax.websocket.OnMessage;
@@ -35,25 +39,21 @@ public class ChatWebSocketServer {
     @Inject
     private UserService userService;
     
-    Logger log = Logger.getLogger(this.getClass().toString());
-    
     @OnOpen
     public void open(Session session){
-        log.info("New User");
-        System.out.println("New User");
+        System.out.println("OnOpen - New Session");
         User usr = new User();
         usr.setSession(session);
         
-        userService.addUser(usr, session);
+        sessionHandler.addUser(usr);
     }
     
     @OnClose
-    public void close(Session session){
-        log.info("Close connection: "+session);
-        //System.out.println("[DG - OnClose]: "+session);
+    public void close(Session session, CloseReason reason){
+        System.out.println("Close connection: "+session);
         User usr = userService.existsSession(session);
-        if(usr != null) sessionHandler.createMsgFromServer("El usuario: \""+usr.getNombre()+"\" ha salido del chat.");
-        userService.removeSession(session);
+        if(usr != null && usr.getNombre() != null) sessionHandler.createMsgFromServer("El usuario: \""+usr.getNombre()+"\" ha salido del chat.");
+        userService.removeUser(session);
     }
     
     @OnError
@@ -62,7 +62,7 @@ public class ChatWebSocketServer {
     }
     
     @OnMessage
-    public void handleMessage(String msg, Session session){
+    public void handleMessage(String msg, Session session) throws IOException{
         try(JsonReader reader = Json.createReader(new StringReader(msg))){
             JsonObject jsonMsg = reader.readObject();
             
@@ -72,15 +72,23 @@ public class ChatWebSocketServer {
                 User usr;
                 
                 String nombre = jsonMsg.getString("nombre");
-                
                 String avatar = !jsonMsg.isNull("avatarURL") ? jsonMsg.getString("avatarURL") : null;
                 
-                usr = new User();
+                //Verificar si existe usuario
+                if(userService.existsUser(nombre) != null){
+                    sessionHandler.createErrorMessage("El nombre de usuario que escogiste ya esta ocupado.", session, 500);
+                    session.close(new CloseReason(CloseReason.CloseCodes.CANNOT_ACCEPT, "USER EXISTS"));
+                    return;
+                }
+                
+                //Actualizar los datos de la sesion
+                usr = userService.existsSession(session);
                 if(avatar != null) usr.setAvatar(avatar);
                 usr.setNombre(nombre);
                 usr.setSession(session);
                 
-                userService.addUser(usr, session);
+                sessionHandler.addUser(usr);
+                
             }
             
             if("msg".equals(jsonMsg.getString("action"))){
