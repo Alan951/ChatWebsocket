@@ -5,6 +5,7 @@
  */
 package mx.jalan.WebSocket;
 
+import com.google.gson.Gson;
 import mx.jalan.WebSocket.services.UserService;
 import java.io.IOException;
 import javax.enterprise.context.ApplicationScoped;
@@ -135,6 +136,7 @@ public class ChatSessionHandler {
     
     public void sendMessageSession(Message msg, Session session){
         //TODO: Convert msg to json string and before send set timestamp now
+        String jsonMessage = new Gson().toJson(msg);
         
         try{
             session.getBasicRemote().sendText(msg.toString());

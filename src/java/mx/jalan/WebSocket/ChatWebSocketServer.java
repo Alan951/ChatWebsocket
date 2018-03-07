@@ -6,6 +6,7 @@
 //package mx.jalan.websocket;
 package mx.jalan.WebSocket;
 
+import com.google.gson.Gson;
 import mx.jalan.WebSocket.services.UserService;
 import java.io.IOException;
 import java.io.StringReader;
@@ -24,7 +25,9 @@ import javax.websocket.OnMessage;
 import javax.websocket.OnOpen;
 import javax.websocket.Session;
 import javax.websocket.server.ServerEndpoint;
+import mx.jalan.Model.EncryptionAlgorithms;
 import mx.jalan.Model.User;
+import mx.jalan.Model.Message;
 
 /**
  *
@@ -99,6 +102,32 @@ public class ChatWebSocketServer {
             if("requestChanges".equals(jsonMsg.getString("action"))){
                 sessionHandler.createUpdateMessage(session);
             }
+        }
+    }
+    
+    public void handleMessageN(String jsonMessage, Session session)throws IOException{
+        Message message = new Gson().fromJson(jsonMessage, Message.class);
+        
+        System.out.println("[DG - OnMessage]: "+message);
+        
+        switch(message.getAction()){
+            case MessageHelper.NEW_USER_MESSAGE:                
+                //Verificar si existe usuario
+                if(userService.existsUser(message.getUserSource().getNombre()) != null){
+                    sessionHandler.createErrorMessage("El nombre de usuario que escogiste ya esta ocupado.", session, MessageHelper.USERNAME_UNAVAILABLE); //Falta modificar
+                    session.close(new CloseReason(CloseReason.CloseCodes.CANNOT_ACCEPT, "USER EXISTS"));
+                    return;
+                }
+                
+                //Actualizar los datos de la sesion                
+                sessionHandler.addUser(message.getUserSource());
+                break;
+            case MessageHelper.SIMPLE_MESSAGE:
+                sessionHandler.sendMessage(message);
+                break;
+            case MessageHelper.REQ_CHANGES:
+                sessionHandler.createUpdateMessage(session);
+                break;
         }
     }
 }
