@@ -5,11 +5,8 @@
  */
 package mx.jalan.WebSocket.services;
 
-import java.io.Serializable;
 import java.util.HashSet;
 import java.util.Set;
-import javax.annotation.PostConstruct;
-import javax.enterprise.context.Dependent;
 import javax.enterprise.context.ApplicationScoped;
 import javax.websocket.Session;
 import mx.jalan.Model.User;
