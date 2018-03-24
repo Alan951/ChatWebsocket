@@ -5,14 +5,17 @@
  */
 package mx.jalan.WebSocket;
 
+import javax.inject.Inject;
 import javax.websocket.Session;
 import mx.jalan.Model.Message;
+import mx.jalan.WebSocket.services.UserService;
 
 /**
  *
  * @author Ck
  */
 public class MessagesConstructor {
+    
     public static Message constructErrorMessage(String msg, Session session, int code){
         Message msgError = new Message();
         msgError.setAction(MessageHelper.ERROR_MESSAGE);

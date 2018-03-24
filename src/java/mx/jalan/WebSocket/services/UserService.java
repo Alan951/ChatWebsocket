@@ -39,9 +39,9 @@ public class UserService {
     }
     
     public User existsUser(User user){
-        for(User u : this.users){
-            if(u.equals(user)){
-                return user;
+        for(User userStorage : this.users){
+            if(userStorage.getNombre().equals(user.getNombre())){
+                return userStorage;
             }
         }
         

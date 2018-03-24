@@ -18,9 +18,9 @@ public class Message {
     private String message;
     private User userSource;
     private User userDestination;
-    private transient Session sessionSource;
-    private transient Session sessionDestination;
     private EncryptionProperties encryptProps;
+    private transient Session sessionDestination;
+    private transient Session sessionSource;
     private LocalDateTime timestamp;
 
     // Default constructor
@@ -118,20 +118,20 @@ public class Message {
         this.timestamp = timestamp;
     }
 
-    public Session getSessionSource() {
-        return sessionSource;
-    }
-
-    public void setSessionSource(Session sessionSource) {
-        this.sessionSource = sessionSource;
-    }
-
     public Session getSessionDestination() {
         return sessionDestination;
     }
 
     public void setSessionDestination(Session sessionDestination) {
         this.sessionDestination = sessionDestination;
+    }
+
+    public Session getSessionSource() {
+        return sessionSource;
+    }
+
+    public void setSessionSource(Session sessionSource) {
+        this.sessionSource = sessionSource;
     }
 
     @Override

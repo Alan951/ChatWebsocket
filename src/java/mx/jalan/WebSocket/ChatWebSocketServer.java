@@ -56,7 +56,11 @@ public class ChatWebSocketServer {
     public void close(Session session, CloseReason reason){
         System.out.println("Close connection: "+session);
         User usr = userService.existsSession(session);
-        if(usr != null && usr.getNombre() != null) sessionHandler.createMsgFromServer("El usuario: \""+usr.getNombre()+"\" ha salido del chat.");
+        if(usr != null && usr.getNombre() != null){
+            Message msg = MessagesConstructor.constructServerMessage("El usuario: \""+usr.getNombre()+"\" ha salido del chat.");
+            sessionHandler.sendBroadcastSession(msg);
+        }
+        //if(usr != null && usr.getNombre() != null) sessionHandler.createMsgFromServer("El usuario: \""+usr.getNombre()+"\" ha salido del chat.");
         userService.removeUser(session);
     }
     
@@ -66,46 +70,8 @@ public class ChatWebSocketServer {
     }
     
     @OnMessage
-    public void handleMessage(String msg, Session session) throws IOException{
-        try(JsonReader reader = Json.createReader(new StringReader(msg))){
-            JsonObject jsonMsg = reader.readObject();
-            
-            System.out.println("[DG - OnMessage]: "+jsonMsg);
-            
-            if("newUsr".equals(jsonMsg.getString("action"))){
-                User usr;
-                
-                String nombre = jsonMsg.getString("nombre");
-                String avatar = !jsonMsg.isNull("avatarURL") ? jsonMsg.getString("avatarURL") : null;
-                
-                //Verificar si existe usuario
-                if(userService.existsUser(nombre) != null){
-                    sessionHandler.createErrorMessage("El nombre de usuario que escogiste ya esta ocupado.", session, 500);
-                    session.close(new CloseReason(CloseReason.CloseCodes.CANNOT_ACCEPT, "USER EXISTS"));
-                    return;
-                }
-                
-                //Actualizar los datos de la sesion
-                usr = userService.existsSession(session);
-                if(avatar != null) usr.setAvatar(avatar);
-                usr.setNombre(nombre);
-                usr.setSession(session);
-                
-                sessionHandler.addUser(usr);
-                
-            }
-            
-            if("msg".equals(jsonMsg.getString("action"))){
-                sessionHandler.sendMessage(jsonMsg, session);
-            }
-            
-            if("requestChanges".equals(jsonMsg.getString("action"))){
-                sessionHandler.createUpdateMessage(session);
-            }
-        }
-    }
-    
-    public void handleMessageN(String jsonMessage, Session session)throws IOException{
+    public void handleMessage(String jsonMessage, Session session)throws IOException{
+        System.out.println("handleMessage: "+jsonMessage);
         Message message = new Gson().fromJson(jsonMessage, Message.class);
         
         System.out.println("[DG - OnMessage]: "+message);
@@ -114,12 +80,18 @@ public class ChatWebSocketServer {
             case MessageHelper.NEW_USER_MESSAGE:                
                 //Verificar si existe usuario
                 if(userService.existsUser(message.getUserSource().getNombre()) != null){
-                    sessionHandler.createErrorMessage("El nombre de usuario que escogiste ya esta ocupado.", session, MessageHelper.USERNAME_UNAVAILABLE); //Falta modificar
+                    //sessionHandler.createErrorMessage(); //Falta modificar
+                    sessionHandler.sendUnicastSession(
+                            MessagesConstructor
+                                    .constructErrorMessage("El nombre de usuario que escogiste ya esta ocupado.", 
+                                            session, 
+                                            MessageHelper.USERNAME_UNAVAILABLE));
                     session.close(new CloseReason(CloseReason.CloseCodes.CANNOT_ACCEPT, "USER EXISTS"));
                     return;
                 }
                 
-                //Actualizar los datos de la sesion                
+                //Actualizar los datos de la sesion   
+                message.getUserSource().setSession(session);
                 sessionHandler.addUser(message.getUserSource());
                 break;
             case MessageHelper.SIMPLE_MESSAGE:
