@@ -7,6 +7,7 @@ package mx.jalan.WebSocket.services;
 
 import java.util.HashSet;
 import java.util.Set;
+import java.util.stream.Collectors;
 import javax.enterprise.context.ApplicationScoped;
 import javax.websocket.Session;
 import mx.jalan.Model.User;
@@ -69,6 +70,10 @@ public class UserService {
     }
     
     public Set<User> getUsersList(){
+        return this.users.stream().filter((usr) -> usr.getNombre() != null).collect(Collectors.toSet());
+    }
+    
+    public Set<User> getSessionList(){
         return this.users;
     }
     

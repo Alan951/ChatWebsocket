@@ -18,7 +18,7 @@ public class Message {
     private String message;
     private User userSource;
     private User userDestination;
-    private EncryptionProperties encryptProps;
+    private transient EncryptionAlgorithm encryptProps;
     private transient Session sessionDestination;
     private transient Session sessionSource;
     private LocalDateTime timestamp;
@@ -29,7 +29,7 @@ public class Message {
     /*
         Constructor to create message from user to other user by private message
     */
-    public Message(String action, String message, User userSource, User userDestination, EncryptionProperties encryptProps, LocalDateTime timestamp, int code) {
+    public Message(String action, String message, User userSource, User userDestination, EncryptionAlgorithm encryptProps, LocalDateTime timestamp, int code) {
         this.action = action;
         this.message = message;
         this.userSource = userSource;
@@ -42,7 +42,7 @@ public class Message {
     /*
         Constructor to create message from user to all
     */
-    public Message(String action, String message, User userSource, EncryptionProperties encryptProps, LocalDateTime timestamp, int code) {
+    public Message(String action, String message, User userSource, EncryptionAlgorithm encryptProps, LocalDateTime timestamp, int code) {
         this.action = action;
         this.message = message;
         this.userSource = userSource;
@@ -54,7 +54,7 @@ public class Message {
     /*
         Constructor to create message from server
     */
-    public Message(String action, String message, EncryptionProperties encryptProps, int code){
+    public Message(String action, String message, EncryptionAlgorithm encryptProps, int code){
         this.action = action;
         this.message = message;
         this.encryptProps = encryptProps;
@@ -102,12 +102,14 @@ public class Message {
         this.userDestination = userDestination;
     }
 
-    public EncryptionProperties getEncryptProps() {
+    public EncryptionAlgorithm getEncryptProps() {
         return encryptProps;
     }
 
-    public void setEncryptProps(EncryptionProperties encryptProps) {
+    public Message setEncryptProps(EncryptionAlgorithm encryptProps) {
         this.encryptProps = encryptProps;
+        
+        return this;
     }
 
     public LocalDateTime getTimestamp() {

@@ -7,17 +7,19 @@
 package mx.jalan.WebSocket;
 
 import com.google.gson.Gson;
+import com.google.gson.reflect.TypeToken;
 import mx.jalan.WebSocket.services.UserService;
 import java.io.IOException;
-import java.io.StringReader;
+import java.lang.reflect.Type;
+import java.util.ArrayList;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 import javax.annotation.PostConstruct;
 import javax.enterprise.context.ApplicationScoped;
 import javax.inject.Inject;
-import javax.json.Json;
-import javax.json.JsonObject;
-import javax.json.JsonReader;
 import javax.websocket.CloseReason;
 import javax.websocket.OnClose;
 import javax.websocket.OnError;
@@ -25,9 +27,11 @@ import javax.websocket.OnMessage;
 import javax.websocket.OnOpen;
 import javax.websocket.Session;
 import javax.websocket.server.ServerEndpoint;
-import mx.jalan.Model.EncryptionAlgorithms;
+import mx.jalan.Model.EncryptionAlgorithm;
 import mx.jalan.Model.User;
 import mx.jalan.Model.Message;
+import mx.jalan.Security.CipherBase;
+import mx.jalan.Security.EncryptionAlgorithms;
 
 /**
  *
@@ -42,6 +46,10 @@ public class ChatWebSocketServer {
     
     @Inject
     private UserService userService;
+    
+    private List<EncryptionAlgorithm> encryptionSupport = new ArrayList<EncryptionAlgorithm>();
+    private EncryptionAlgorithm encryptionActive;
+    private CipherBase cipher;
     
     @OnOpen
     public void open(Session session){
@@ -70,9 +78,11 @@ public class ChatWebSocketServer {
     }
     
     @OnMessage
-    public void handleMessage(String jsonMessage, Session session)throws IOException{
-        System.out.println("handleMessage: "+jsonMessage);
-        Message message = new Gson().fromJson(jsonMessage, Message.class);
+    public void handleMessage(String strMessage, Session session)throws IOException{
+        System.out.println("[DG - handleMessage]: "+strMessage);
+        //TODO: check if is encrypted
+        
+        Message message = new Gson().fromJson(strMessage, Message.class);
         
         System.out.println("[DG - OnMessage]: "+message);
         
@@ -85,8 +95,12 @@ public class ChatWebSocketServer {
                             MessagesConstructor
                                     .constructErrorMessage("El nombre de usuario que escogiste ya esta ocupado.", 
                                             session, 
-                                            MessageHelper.USERNAME_UNAVAILABLE));
+                                            MessageHelper.USERNAME_UNAVAILABLE_CODE)
+                                    .setEncryptProps(this.getEncryptionActive() != null ? this.getEncryptionActive() : null) // SET ENCRYPTION PROPS
+                    );
+                    
                     session.close(new CloseReason(CloseReason.CloseCodes.CANNOT_ACCEPT, "USER EXISTS"));
+                    
                     return;
                 }
                 
@@ -100,6 +114,92 @@ public class ChatWebSocketServer {
             case MessageHelper.REQ_CHANGES:
                 sessionHandler.createUpdateMessage(session);
                 break;
+            case MessageHelper.USER_LIST:                
+                sessionHandler.sendUnicastSession(
+                        new Message(
+                                MessageHelper.USER_LIST,
+                                new Gson().toJson(this.userService.getUsersList()),
+                                null,
+                                MessageHelper.OK_CODE
+                        ).setEncryptProps(this.getEncryptionActive() != null ? this.getEncryptionActive() : null) // SET ENCRYPTION PROPS
+                    , session);
+                
+                break;
+            case MessageHelper.SUPPORT_ENCRYPTION:
+                Type t = new TypeToken<List<EncryptionAlgorithm>>(){}.getType();
+                sessionHandler.sendUnicastSession(
+                        new Message(
+                                MessageHelper.SUPPORT_ENCRYPTION, 
+                                new Gson().toJson(this.encryptionSupport, t), 
+                                null, 
+                                MessageHelper.OK_CODE),
+                        session);
+                break;
+            case MessageHelper.REQ_ENABLE_ENCRYPTION:
+                EncryptionAlgorithm cipher = 
+                        new Gson().fromJson(message.getMessage(), EncryptionAlgorithm.class);
+                
+                System.out.println("[DG - EnableEncryption]: "+ cipher);
+                
+                this.sessionHandler.enableEncryption(cipher);
+                
+                break;
+            case MessageHelper.REQ_DISABLE_ENCRYPTION:
+                System.out.println("[DG - DisableEncryption]: ");
+                
+                if(this.encryptionActive == null){
+                    //TODO SEND ERROR BECAUSE ENCRYPTION NOT SETTED YET.
+                    return;
+                }
+                
+                this.sessionHandler.disableEncryption();
+                break;
+            case MessageHelper.CHECK_ENCRYPTION:
+                sessionHandler.sendUnicastSession(
+                        new Message(
+                            MessageHelper.CHECK_ENCRYPTION, 
+                            this.cipher != null ? this.cipher.getCipherName() : this.cipher.getCipherName(), 
+                            null, 
+                            this.cipher != null ? MessageHelper.OK_CODE : MessageHelper.NOT_FOUND_CODE),
+                        session);
+            default:
+                //TODO: Respond error action unknown
+                System.out.println("[DG - Action unknown]");
         }
+    }
+    
+    /*
+        All Algorithm supported is declared here.
+    */
+    @PostConstruct
+    public void initEncryption(){
+        Map<String, String> syncProp = new HashMap<String, String>();
+        syncProp.put("key", "");
+        
+        this.encryptionSupport.add(new EncryptionAlgorithm(EncryptionAlgorithms.CASER, 
+                EncryptionAlgorithms.SYNC_CIPHER, 
+                syncProp));
+        
+        
+    }
+    
+    public List<EncryptionAlgorithm> getAlgorithms(){
+        return this.encryptionSupport;
+    }
+    
+    public EncryptionAlgorithm getEncryptionActive(){
+        return this.encryptionActive;
+    }
+    
+    public void setEncryptionActive(EncryptionAlgorithm cipher){
+        this.encryptionActive = cipher;
+    }
+    
+    public CipherBase getCipher(){
+        return this.cipher;
+    }
+    
+    public void setCipher(CipherBase cipher){
+        this.cipher = cipher;
     }
 }

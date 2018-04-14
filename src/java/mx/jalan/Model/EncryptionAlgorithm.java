@@ -11,16 +11,21 @@ import java.util.Map;
  *
  * @author Ck
  */
-public class EncryptionProperties {
+public class EncryptionAlgorithm {
     
     private String algorithm;
     private int algorithmType;
     private Map<String, String> properties;
 
-    public EncryptionProperties(String algorithm, int algorithmType, Map<String, String> properties) {
+    public EncryptionAlgorithm(String algorithm, int algorithmType, Map<String, String> properties) {
         this.algorithm = algorithm;
         this.algorithmType = algorithmType;
         this.properties = properties;
+    }
+    
+    public EncryptionAlgorithm(String algorithm, int algorithmType){
+        this.algorithm = algorithm;
+        this.algorithmType = algorithmType;
     }
 
     public String getAlgorithm() {
