@@ -176,7 +176,7 @@ public class ChatWebSocketServer {
         Map<String, String> syncProp = new HashMap<String, String>();
         syncProp.put("key", "");
         
-        this.encryptionSupport.add(new EncryptionAlgorithm(EncryptionAlgorithms.CASER, 
+        this.encryptionSupport.add(new EncryptionAlgorithm(EncryptionAlgorithms.CAESAR, 
                 EncryptionAlgorithms.SYNC_CIPHER, 
                 syncProp));
         
