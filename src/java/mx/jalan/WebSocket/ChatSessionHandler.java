@@ -162,7 +162,7 @@ public class ChatSessionHandler {
         System.out.println("[DG - onSendMessageToSession]\n\t(jsonMessage): " + jsonMessage);
         
         if(msg.getEncryptProps() != null){ //Si el mensaje se tiene que enviar cifrado.
-            String messageBase64 = null; //Mensaje en base64
+            /*String messageBase64 = null; //Mensaje en base64
             String messageEncrypted = null; //Mensaje en base64 cifrado
             String messageEncryptedBase64 = null; //Mensaje en base64 cifrado y codificado en base64
             
@@ -177,7 +177,11 @@ public class ChatSessionHandler {
             String messageDecrypter = this.chatWS.getCipher().decode(messageDecrypterBase64);
             String messageD = new String(Base64.getDecoder().decode(messageDecrypter.getBytes()));
 
-            System.out.println("DECODED MESSAGE:" + messageD);
+            System.out.println("DECODED MESSAGE:" + messageD);*/
+            
+            message = this.chatWS.getCipher().encode(jsonMessage);
+            System.out.println("Encrypted Message");
+            System.out.println("Decrypted: " + this.chatWS.getCipher().decode(message));
         }else
             message = jsonMessage;
         

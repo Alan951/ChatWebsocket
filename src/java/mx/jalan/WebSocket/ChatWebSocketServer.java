@@ -32,6 +32,7 @@ import mx.jalan.Model.User;
 import mx.jalan.Model.Message;
 import mx.jalan.Security.CipherBase;
 import mx.jalan.Security.EncryptionAlgorithms;
+import mx.jalan.Utils.JsonUtils;
 
 /**
  *
@@ -49,7 +50,7 @@ public class ChatWebSocketServer {
     
     private List<EncryptionAlgorithm> encryptionSupport = new ArrayList<EncryptionAlgorithm>();
     private EncryptionAlgorithm encryptionActive;
-    private CipherBase cipher;
+    private static CipherBase cipher;
     
     @OnOpen
     public void open(Session session){
@@ -80,11 +81,24 @@ public class ChatWebSocketServer {
     @OnMessage
     public void handleMessage(String strMessage, Session session)throws IOException{
         System.out.println("[DG - handleMessage]: "+strMessage);
-        //TODO: check if is encrypted
         
-        Message message = new Gson().fromJson(strMessage, Message.class);
+        Message message = null;
         
-        System.out.println("[DG - OnMessage]: "+message);
+        if(JsonUtils.isJsonObject(strMessage)){ //Si strMessage es json
+            message = new Gson().fromJson(strMessage, Message.class);
+            System.out.println("[DG - OnMessage]: "+message);
+        }else{ //Probablemente sea un mensaje cifrado.
+            System.out.println("[DG - OnMessage Encrypted?]: "+strMessage);
+            
+            String msgDecoded = this.cipher.decode(strMessage);
+            
+            if(JsonUtils.isJsonObject(msgDecoded)){
+                message = new Gson().fromJson(msgDecoded, Message.class);
+                System.out.println("[DG - OnMessage Decrypted]: "+message);
+            }else{
+                return;
+            }
+        }
         
         switch(message.getAction()){
             case MessageHelper.NEW_USER_MESSAGE:                
@@ -173,6 +187,7 @@ public class ChatWebSocketServer {
     */
     @PostConstruct
     public void initEncryption(){
+        System.out.println("postconstruct called");
         Map<String, String> syncProp = new HashMap<String, String>();
         syncProp.put("key", "");
         
