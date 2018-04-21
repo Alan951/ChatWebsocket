@@ -22,4 +22,8 @@ public interface CipherBase<T, KT extends Serializable> {
         public void setPublicKey(KT key);
         
         public KT getPublicKey();
+        
+        public void setDebugMode(boolean debug);
+        
+        public boolean idDebugMode();
 }

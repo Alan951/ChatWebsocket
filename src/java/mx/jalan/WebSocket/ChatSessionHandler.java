@@ -159,25 +159,9 @@ public class ChatSessionHandler {
         String jsonMessage = new Gson().toJson(msg, Message.class);
         String message = null;
         
-        System.out.println("[DG - onSendMessageToSession]\n\t(jsonMessage): " + jsonMessage);
+        System.out.println("[DG - onSendMessageToSession JSON]: " + jsonMessage);
         
         if(msg.getEncryptProps() != null){ //Si el mensaje se tiene que enviar cifrado.
-            /*String messageBase64 = null; //Mensaje en base64
-            String messageEncrypted = null; //Mensaje en base64 cifrado
-            String messageEncryptedBase64 = null; //Mensaje en base64 cifrado y codificado en base64
-            
-            messageBase64 = new String(Base64.getEncoder().encode(jsonMessage.getBytes()));
-            messageEncrypted = this.chatWS.getCipher().encode(messageBase64);
-            messageEncryptedBase64 = new String(Base64.getEncoder().encode(messageEncrypted.getBytes()));
-            message = messageEncryptedBase64;
-            
-            System.out.println("[*] Message encrypted.");
-            
-            String messageDecrypterBase64 = new String(Base64.getDecoder().decode(message.getBytes()));
-            String messageDecrypter = this.chatWS.getCipher().decode(messageDecrypterBase64);
-            String messageD = new String(Base64.getDecoder().decode(messageDecrypter.getBytes()));
-
-            System.out.println("DECODED MESSAGE:" + messageD);*/
             
             message = this.chatWS.getCipher().encode(jsonMessage);
             System.out.println("Encrypted Message");
@@ -185,7 +169,7 @@ public class ChatSessionHandler {
         }else
             message = jsonMessage;
         
-        System.out.println("\n\t(message): " + message);
+        System.out.println("[DG - onSendMessageToSession PLAIN]: " + message);
         
         
         
@@ -246,5 +230,9 @@ public class ChatSessionHandler {
         
         //Notify to all session that the encryption is disabled.
         this.sendBroadcastSession(new Message(MessageHelper.DISABLE_ENCRYPTION, null, null, MessageHelper.OK_CODE)); 
+    }
+    
+    public void setChatWS(ChatWebSocketServer chat){
+        this.chatWS = chat;
     }
 }

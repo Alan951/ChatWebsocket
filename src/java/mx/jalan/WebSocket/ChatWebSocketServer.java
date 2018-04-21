@@ -11,6 +11,7 @@ import com.google.gson.reflect.TypeToken;
 import mx.jalan.WebSocket.services.UserService;
 import java.io.IOException;
 import java.lang.reflect.Type;
+import java.nio.charset.Charset;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
@@ -80,6 +81,8 @@ public class ChatWebSocketServer {
     
     @OnMessage
     public void handleMessage(String strMessage, Session session)throws IOException{
+        //this.sessionHandler.sendUnicastSession(new Message(MessageHelper.SIMPLE_MESSAGE, "Aikabrown, Traes el omnitracks!", this.encryptionActive, MessageHelper.OK_CODE), session);
+        
         System.out.println("[DG - handleMessage]: "+strMessage);
         
         Message message = null;
@@ -88,9 +91,12 @@ public class ChatWebSocketServer {
             message = new Gson().fromJson(strMessage, Message.class);
             System.out.println("[DG - OnMessage]: "+message);
         }else{ //Probablemente sea un mensaje cifrado.
+            System.out.println("[DG - Verify Encryption with]: " + this.cipher);
             System.out.println("[DG - OnMessage Encrypted?]: "+strMessage);
             
             String msgDecoded = this.cipher.decode(strMessage);
+            
+            System.out.println("[DG - OnMessage Decrypted?]: "+msgDecoded);
             
             if(JsonUtils.isJsonObject(msgDecoded)){
                 message = new Gson().fromJson(msgDecoded, Message.class);
@@ -151,7 +157,8 @@ public class ChatWebSocketServer {
                 break;
             case MessageHelper.REQ_ENABLE_ENCRYPTION:
                 EncryptionAlgorithm cipher = 
-                        new Gson().fromJson(message.getMessage(), EncryptionAlgorithm.class);
+                        new Gson().fromJson(message.getMessage(), 
+                                EncryptionAlgorithm.class);
                 
                 System.out.println("[DG - EnableEncryption]: "+ cipher);
                 
@@ -187,6 +194,7 @@ public class ChatWebSocketServer {
     */
     @PostConstruct
     public void initEncryption(){
+        this.sessionHandler.setChatWS(this);
         System.out.println("postconstruct called");
         Map<String, String> syncProp = new HashMap<String, String>();
         syncProp.put("key", "");
