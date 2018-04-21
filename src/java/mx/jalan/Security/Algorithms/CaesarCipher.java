@@ -2,6 +2,8 @@ package mx.jalan.Security.Algorithms;
 
 import java.io.Serializable;
 import java.util.Base64;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
 import mx.jalan.Security.CipherBase;
 import org.apache.commons.lang3.math.NumberUtils;
 
@@ -9,7 +11,7 @@ public class CaesarCipher<T, KT extends Serializable> implements CipherBase<T, K
 
     private KT key;
 
-    private static final String LETTERS = "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789+/=";
+    private static final String LETTERS = "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789+/";
 
     public CaesarCipher(KT key) {
         this.key = key;
@@ -66,13 +68,25 @@ public class CaesarCipher<T, KT extends Serializable> implements CipherBase<T, K
     }
 
     @Override
-    public String encode(T textToCipher) {
+    public String encode(T textToCipher) {    	
         String textString = textToCipher.toString();
+        String comodinPadding;
+        
+        String pattern = "(\\=+)";
         String textString64 = new String(Base64.getEncoder().encode(textString.getBytes()));
+
+        Matcher matcher = Pattern.compile(pattern).matcher(textString64);
+        
+        comodinPadding = matcher.find() ? matcher.group(1) : null;
+        if(comodinPadding != null){
+        	textString64 = textString64.replaceAll(pattern, "");
+        }
+        
         char text[] = textString64.toCharArray();
 
         for (int x = 0; x < text.length; x++) { //Recorrer cada letra del texto
             char n = text[x];
+            System.out.println("Err in: "+n);
             int pos = getPosLetterInLetters(searchChar(n));
 
             if ((pos + getNumberKey(key)) >= LETTERS.length()) {
@@ -93,12 +107,28 @@ public class CaesarCipher<T, KT extends Serializable> implements CipherBase<T, K
             text[x] = n;
         }
         
-        return new String(text);
+        textString64 = new String(text);
+        if(comodinPadding != null){
+        	textString64 += comodinPadding;
+        }
+        
+        return textString64;
     }
 
     @Override
     public String decode(T textToDecipher) {
-        char text[] = textToDecipher.toString().toCharArray();
+    	String textString64 = textToDecipher.toString(); 
+    	String comodinPadding;
+    	
+    	String pattern = "(\\=+)";
+    	Matcher matcher = Pattern.compile(pattern).matcher(textString64);
+    	
+    	comodinPadding = matcher.find() ? matcher.group(1) : null;
+    	if(comodinPadding != null){
+    		textString64 = textString64.replaceAll(pattern, "");
+    	}
+    	
+        char text[] = textString64.toString().toCharArray();
 
         for (int x = 0; x < text.length; x++) {
             char n = text[x];
@@ -125,9 +155,13 @@ public class CaesarCipher<T, KT extends Serializable> implements CipherBase<T, K
             text[x] = n;
         }
         
-        return new String(Base64.getDecoder().decode(new String(text)));
-
-        //return new String(text);
+        String textDecode64 = new String(text);
+        
+        if(comodinPadding != null){
+        	textDecode64 += comodinPadding;
+        }
+        
+        return new String(Base64.getDecoder().decode(textDecode64));
     }
     
     @Override
