@@ -53,10 +53,6 @@ public class ChatWebSocketServer {
     @Inject
     private EncryptionService encryptionService;
     
-    private List<EncryptionAlgorithm> encryptionSupport = new ArrayList<EncryptionAlgorithm>();
-    private EncryptionAlgorithm encryptionActive;
-    private CipherBase cipher;
-    
     @OnOpen
     public void open(Session session){
         System.out.println("OnOpen - New Session");
@@ -74,7 +70,7 @@ public class ChatWebSocketServer {
             Message msg = MessagesConstructor.constructServerMessage("El usuario: \""+usr.getNombre()+"\" ha salido del chat.");
             sessionHandler.sendBroadcastSession(msg);
         }
-        //if(usr != null && usr.getNombre() != null) sessionHandler.createMsgFromServer("El usuario: \""+usr.getNombre()+"\" ha salido del chat.");
+        
         userService.removeUser(session);
     }
     
@@ -95,10 +91,10 @@ public class ChatWebSocketServer {
             message = new Gson().fromJson(strMessage, Message.class);
             System.out.println("[DG - OnMessage]: "+message);
         }else{ //Probablemente sea un mensaje cifrado.
-            System.out.println("[DG - Verify Encryption with]: " + this.cipher);
+            System.out.println("[DG - Verify Encryption with]: " + this.encryptionService.getCipher());
             System.out.println("[DG - OnMessage Encrypted?]: "+strMessage);
             
-            String msgDecoded = this.cipher.decode(strMessage);
+            String msgDecoded = this.encryptionService.getCipher().decode(strMessage);
             
             System.out.println("[DG - OnMessage Decrypted?]: "+msgDecoded);
             
@@ -120,7 +116,7 @@ public class ChatWebSocketServer {
                                     .constructErrorMessage("El nombre de usuario que escogiste ya esta ocupado.", 
                                             session, 
                                             MessageHelper.USERNAME_UNAVAILABLE_CODE)
-                                    .setEncryptProps(this.getEncryptionActive() != null ? this.getEncryptionActive() : null) // SET ENCRYPTION PROPS
+                                    .setEncryptProps(this.encryptionService.cipherActive() ? this.encryptionService.getEncryptionAlgorithmEnabled() : null) // SET ENCRYPTION PROPS
                     );
                     
                     session.close(new CloseReason(CloseReason.CloseCodes.CANNOT_ACCEPT, "USER EXISTS"));
@@ -145,7 +141,7 @@ public class ChatWebSocketServer {
                                 new Gson().toJson(this.userService.getUsersList()),
                                 null,
                                 MessageHelper.OK_CODE
-                        ).setEncryptProps(this.getEncryptionActive() != null ? this.getEncryptionActive() : null) // SET ENCRYPTION PROPS
+                        ).setEncryptProps(this.encryptionService.cipherActive() ? this.encryptionService.getEncryptionAlgorithmEnabled() : null) // SET ENCRYPTION PROPS
                     , session);
                 
                 break;
@@ -154,7 +150,7 @@ public class ChatWebSocketServer {
                 sessionHandler.sendUnicastSession(
                         new Message(
                                 MessageHelper.SUPPORT_ENCRYPTION, 
-                                new Gson().toJson(this.encryptionSupport, t), 
+                                new Gson().toJson(this.encryptionService.getEncryptionAlgorithmSupport(), t), 
                                 null, 
                                 MessageHelper.OK_CODE),
                         session);
@@ -172,7 +168,7 @@ public class ChatWebSocketServer {
             case MessageHelper.REQ_DISABLE_ENCRYPTION:
                 System.out.println("[DG - DisableEncryption]: ");
                 
-                if(this.encryptionActive == null){
+                if(this.encryptionService.cipherActive()){
                     //TODO SEND ERROR BECAUSE ENCRYPTION NOT SETTED YET.
                     return;
                 }
@@ -183,9 +179,9 @@ public class ChatWebSocketServer {
                 sessionHandler.sendUnicastSession(
                         new Message(
                             MessageHelper.CHECK_ENCRYPTION, 
-                            this.cipher != null ? this.cipher.getCipherName() : this.cipher.getCipherName(), 
+                            this.encryptionService.cipherActive() ? this.encryptionService.getCipher().getCipherName() : null, 
                             null, 
-                            this.cipher != null ? MessageHelper.OK_CODE : MessageHelper.NOT_FOUND_CODE),
+                            this.encryptionService.cipherActive() ? MessageHelper.OK_CODE : MessageHelper.NOT_FOUND_CODE),
                         session);
             default:
                 //TODO: Respond error action unknown
@@ -201,25 +197,5 @@ public class ChatWebSocketServer {
         System.out.println("postconstruct called");
         Map<String, String> syncProp = new HashMap<String, String>();
         syncProp.put("key", "");
-    }
-    
-    public List<EncryptionAlgorithm> getAlgorithms(){
-        return this.encryptionSupport;
-    }
-    
-    public EncryptionAlgorithm getEncryptionActive(){
-        return this.encryptionActive;
-    }
-    
-    public void setEncryptionActive(EncryptionAlgorithm cipher){
-        this.encryptionActive = cipher;
-    }
-    
-    public CipherBase getCipher(){
-        return this.cipher;
-    }
-    
-    public void setCipher(CipherBase cipher){
-        this.cipher = cipher;
     }
 }

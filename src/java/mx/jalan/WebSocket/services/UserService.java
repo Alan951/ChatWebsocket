@@ -9,6 +9,7 @@ import java.util.HashSet;
 import java.util.Set;
 import java.util.stream.Collectors;
 import javax.enterprise.context.ApplicationScoped;
+import javax.inject.Singleton;
 import javax.websocket.Session;
 import mx.jalan.Model.User;
 
@@ -16,7 +17,7 @@ import mx.jalan.Model.User;
  *
  * @author Ck
  */
-@ApplicationScoped
+@Singleton
 public class UserService {
     
     private final Set<User> users = new HashSet<>();

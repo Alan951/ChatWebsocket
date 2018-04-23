@@ -55,10 +55,10 @@ public class ChatSessionHandler {
                     algoritmo de cifrado activo en el servidor
                     se lo notificara al usuario recien conectado
                 */
-                if(this.chatWS.getEncryptionActive() != null){
+                if(this.encryptionService.cipherActive()){
                     this.sendUnicastSession(
                         MessagesConstructor
-                            .constructNotifyEnableEncryptionMessage(this.chatWS.getEncryptionActive()), storageUser.getSession());
+                            .constructNotifyEnableEncryptionMessage(this.encryptionService.getEncryptionAlgorithmEnabled()), storageUser.getSession());
                 }
                 
             }else{
@@ -68,8 +68,8 @@ public class ChatSessionHandler {
     }
     
     public void sendMessage(Message msg){
-        if(this.chatWS.getEncryptionActive() != null) //Si existe un algorithmo de cifrado activo, aplicar la propiedad para cifrar el mensaje
-            msg.setEncryptProps(this.chatWS.getEncryptionActive()); 
+        if(this.encryptionService.cipherActive()) //Si existe un algorithmo de cifrado activo, aplicar la propiedad para cifrar el mensaje
+            msg.setEncryptProps(this.encryptionService.getEncryptionAlgorithmEnabled()); 
         
         if(msg.getUserDestination() == null){ //Message to all
             //sendBroadcastSession(msg, msg.getSessionSource());
@@ -178,9 +178,9 @@ public class ChatSessionHandler {
         
         if(msg.getEncryptProps() != null){ //Si el mensaje se tiene que enviar cifrado.
             
-            message = this.chatWS.getCipher().encode(jsonMessage);
+            message = this.encryptionService.getCipher().encode(jsonMessage);
             System.out.println("Encrypted Message");
-            System.out.println("Decrypted: " + this.chatWS.getCipher().decode(message));
+            System.out.println("Decrypted: " + this.encryptionService.getCipher().decode(message));
         }else
             message = jsonMessage;
         
@@ -199,55 +199,11 @@ public class ChatSessionHandler {
     public void enableEncryption(EncryptionAlgorithm encryptionReq){
         if(this.encryptionService.enableCipher(encryptionReq)){ //Pudo habilitar el cifrado
             this.sendBroadcastSession(MessagesConstructor.
-                constructNotifyEnableEncryptionMessage(this.chatWS.getEncryptionActive()));
+                constructNotifyEnableEncryptionMessage(this.encryptionService.getEncryptionAlgorithmEnabled()));
         }else{ //No pudo habilitar el cifrado.
         
         }
     }
-    
-    /*public void enableEncryption(EncryptionAlgorithm algorithmReq){
-        //check if exists algorithmName
-        EncryptionAlgorithm encrypAlg = this.chatWS.getAlgorithms()
-                .stream()
-                .filter((algorithm) -> algorithm.getAlgorithm()
-                        .equals(algorithmReq.getAlgorithm()))
-                .findFirst().get();
-        
-        if(encrypAlg == null){ //El cifrado no existe
-            //TODO: respond with error to panel
-            System.out.println("[DG] El metodo criptografico no existe");
-            return;
-        }
-        
-        System.out.println("[DG] Habilitando metodo criptografico");
-        
-        if(encrypAlg.getAlgorithmType() == EncryptionAlgorithms.SYNC_CIPHER){
-            //validate if is long data type
-            Long key = Long.parseLong(algorithmReq.getProperties().get("key"));
-            
-            CipherBase<String, Long> cipher = new CipherFactory().getCipher(encrypAlg.getAlgorithm());
-            cipher.setKey(key);
-            
-            this.chatWS.setCipher(cipher);
-            
-        }else if(encrypAlg.getAlgorithmType() == EncryptionAlgorithms.ASYNC_CIPHER){
-            Long publicKey = Long.parseLong(algorithmReq.getProperties().get("publicKey"));
-            Long privateKey = Long.parseLong(algorithmReq.getProperties().get("privateKey"));
-            
-            CipherBase<String, Long> cipher = new CipherFactory().getCipher(encrypAlg.getAlgorithm());
-            cipher.setPublicKey(publicKey);
-            cipher.setPrivateKey(privateKey);
-            
-            this.chatWS.setCipher(cipher);
-        }
-        
-        this.chatWS.setEncryptionActive(algorithmReq);
-        
-        //Notify to all the new cipher algorithm established.
-        
-        //this.sendBroadcastSession(new Message(MessageHelper.ENABLE_ENCRYPTION,
-        //        this.chatWS.getCipher().getCipherName(), null, MessageHelper.OK_CODE));
-    }*/
 
     void disableEncryption() {
         this.encryptionService.disableCipher();
