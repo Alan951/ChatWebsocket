@@ -7,6 +7,7 @@ package mx.jalan.WebSocket;
 
 import javax.inject.Inject;
 import javax.websocket.Session;
+import mx.jalan.Model.EncryptionAlgorithm;
 import mx.jalan.Model.Message;
 import mx.jalan.WebSocket.services.UserService;
 
@@ -33,5 +34,10 @@ public class MessagesConstructor {
         msg.setCode(200);
         
         return msg;
+    }
+    
+    public static Message constructNotifyEnableEncryptionMessage(EncryptionAlgorithm encryption){
+        return new Message(MessageHelper.ENABLE_ENCRYPTION,
+                encryption.getAlgorithm(), null, MessageHelper.OK_CODE);
     }
 }

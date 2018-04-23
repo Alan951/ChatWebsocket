@@ -19,6 +19,7 @@ import mx.jalan.Model.Message;
 import mx.jalan.Security.CipherBase;
 import mx.jalan.Security.CipherFactory;
 import mx.jalan.Security.EncryptionAlgorithms;
+import mx.jalan.WebSocket.services.EncryptionService;
 
 /**
  *
@@ -33,6 +34,9 @@ public class ChatSessionHandler {
     @Inject
     private ChatWebSocketServer chatWS;
     
+    @Inject
+    private EncryptionService encryptionService;
+    
     public void addUser(User usuario){
         User storageUser = userService.existsSession(usuario.getSession());
         
@@ -45,6 +49,17 @@ public class ChatSessionHandler {
                 Message msg = MessagesConstructor
                         .constructServerMessage("Bienvenido: "+ usuario.getNombre()+"!!!");
                 sendBroadcastSession(msg);
+                
+                /*
+                    Cuando un usuario se conecta y existe un
+                    algoritmo de cifrado activo en el servidor
+                    se lo notificara al usuario recien conectado
+                */
+                if(this.chatWS.getEncryptionActive() != null){
+                    this.sendUnicastSession(
+                        MessagesConstructor
+                            .constructNotifyEnableEncryptionMessage(this.chatWS.getEncryptionActive()), storageUser.getSession());
+                }
                 
             }else{
                 System.out.println("[*] Error al intentar actualizar los datos del usuario.");
@@ -181,7 +196,16 @@ public class ChatSessionHandler {
         }
     }
     
-    public void enableEncryption(EncryptionAlgorithm algorithmReq){
+    public void enableEncryption(EncryptionAlgorithm encryptionReq){
+        if(this.encryptionService.enableCipher(encryptionReq)){ //Pudo habilitar el cifrado
+            this.sendBroadcastSession(MessagesConstructor.
+                constructNotifyEnableEncryptionMessage(this.chatWS.getEncryptionActive()));
+        }else{ //No pudo habilitar el cifrado.
+        
+        }
+    }
+    
+    /*public void enableEncryption(EncryptionAlgorithm algorithmReq){
         //check if exists algorithmName
         EncryptionAlgorithm encrypAlg = this.chatWS.getAlgorithms()
                 .stream()
@@ -220,19 +244,16 @@ public class ChatSessionHandler {
         this.chatWS.setEncryptionActive(algorithmReq);
         
         //Notify to all the new cipher algorithm established.
-        this.sendBroadcastSession(new Message(MessageHelper.ENABLE_ENCRYPTION,
-                this.chatWS.getCipher().getCipherName(), null, MessageHelper.OK_CODE));
-    }
+        
+        //this.sendBroadcastSession(new Message(MessageHelper.ENABLE_ENCRYPTION,
+        //        this.chatWS.getCipher().getCipherName(), null, MessageHelper.OK_CODE));
+    }*/
 
     void disableEncryption() {
-        this.chatWS.setCipher(null);
-        this.chatWS.setEncryptionActive(null);
+        this.encryptionService.disableCipher();
+        
         
         //Notify to all session that the encryption is disabled.
         this.sendBroadcastSession(new Message(MessageHelper.DISABLE_ENCRYPTION, null, null, MessageHelper.OK_CODE)); 
-    }
-    
-    public void setChatWS(ChatWebSocketServer chat){
-        this.chatWS = chat;
     }
 }

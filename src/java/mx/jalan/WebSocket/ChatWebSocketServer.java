@@ -34,6 +34,7 @@ import mx.jalan.Model.Message;
 import mx.jalan.Security.CipherBase;
 import mx.jalan.Security.EncryptionAlgorithms;
 import mx.jalan.Utils.JsonUtils;
+import mx.jalan.WebSocket.services.EncryptionService;
 
 /**
  *
@@ -49,9 +50,12 @@ public class ChatWebSocketServer {
     @Inject
     private UserService userService;
     
+    @Inject
+    private EncryptionService encryptionService;
+    
     private List<EncryptionAlgorithm> encryptionSupport = new ArrayList<EncryptionAlgorithm>();
     private EncryptionAlgorithm encryptionActive;
-    private static CipherBase cipher;
+    private CipherBase cipher;
     
     @OnOpen
     public void open(Session session){
@@ -194,16 +198,9 @@ public class ChatWebSocketServer {
     */
     @PostConstruct
     public void initEncryption(){
-        this.sessionHandler.setChatWS(this);
         System.out.println("postconstruct called");
         Map<String, String> syncProp = new HashMap<String, String>();
         syncProp.put("key", "");
-        
-        this.encryptionSupport.add(new EncryptionAlgorithm(EncryptionAlgorithms.CAESAR, 
-                EncryptionAlgorithms.SYNC_CIPHER, 
-                syncProp));
-        
-        
     }
     
     public List<EncryptionAlgorithm> getAlgorithms(){
