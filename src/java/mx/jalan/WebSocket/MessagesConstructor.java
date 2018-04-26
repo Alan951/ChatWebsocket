@@ -5,11 +5,9 @@
  */
 package mx.jalan.WebSocket;
 
-import javax.inject.Inject;
 import javax.websocket.Session;
 import mx.jalan.Model.EncryptionAlgorithm;
 import mx.jalan.Model.Message;
-import mx.jalan.WebSocket.services.UserService;
 
 /**
  *
@@ -30,6 +28,15 @@ public class MessagesConstructor {
     public static Message constructServerMessage(String message){
         Message msg = new Message();
         msg.setAction(MessageHelper.SIMPLE_MESSAGE);
+        msg.setMessage(message);
+        msg.setCode(200);
+        
+        return msg;
+    }
+    
+    public static Message constructWelcomeMessage(String message){
+        Message msg = new Message();
+        msg.setAction(MessageHelper.WELCOME_MESSAGE);
         msg.setMessage(message);
         msg.setCode(200);
         

@@ -46,9 +46,12 @@ public class ChatSessionHandler {
             if(usuario.getNombre() != null && !usuario.getNombre().trim().isEmpty()){
                 storageUser.setNombre(usuario.getNombre());
                 
-                Message msg = MessagesConstructor
+                Message msgUser = MessagesConstructor
+                        .constructWelcomeMessage("Bienvenido: "+ usuario.getNombre()+"!!!");
+                Message msgAll = MessagesConstructor
                         .constructServerMessage("Bienvenido: "+ usuario.getNombre()+"!!!");
-                sendBroadcastSession(msg);
+                sendUnicastSession(msgUser, storageUser.getSession());
+                sendBroadcastUsers(msgAll, storageUser.getSession());
                 
                 /*
                     Cuando un usuario se conecta y existe un
@@ -93,6 +96,11 @@ public class ChatSessionHandler {
         System.out.println(usersArrJson);
     }
     
+    
+    /*
+        Envia un mensaje a todas las sesiones excepto al emisor
+        especificado en el parametro Session.
+    */
     public void sendBroadcastSession(Message msg, Session session){
         System.out.println("[DG - Send Broadcast]: "+msg.toString());
         
@@ -106,6 +114,10 @@ public class ChatSessionHandler {
         });
     }
     
+    /*
+        Envia un mensaje a todas las sesiones excepto al emisor
+        especificado en el modelo de Message.
+    */
     public void sendBroadcastSession(Message msg) {
         System.out.println("[DG - Send BroadcastSession]: "+msg.toString());
         
@@ -127,6 +139,10 @@ public class ChatSessionHandler {
         }
     }
     
+    /*
+        Envia un mensaje a todos todas las sesiones de todos los usuarios
+        excepto al usuario emisor especificado en el modelo Message.
+    */
     public void sendBroadcastUsers(Message msg){
         System.out.println("[DG - Send BroadcastUsers]: "+msg.toString());
         
@@ -145,6 +161,10 @@ public class ChatSessionHandler {
         }
     }
     
+    /*
+        Envia un mensaje a todas las sesiones de los usuarios excepto
+        la session del emisor especificado en el parametro Session
+    */
     public void sendBroadcastUsers(Message msg, Session session){
         System.out.println("[DG - Send BroadcastUsers]: "+msg.toString());
         
@@ -158,17 +178,23 @@ public class ChatSessionHandler {
         });
     }
     
+    /*
+        Envia un mensaje a una sesion en especifico utilizando el parametro.
+    */
     public void sendUnicastSession(Message msg, Session session){
         sendMessageSession(msg, session);
     }
     
     /*
-        Send message to one session when message have the session destination.
+        Envia un mensaje a una sesion en especifico utilizando el modelo Message.
     */
     public void sendUnicastSession(Message msg){        
         sendMessageSession(msg, msg.getSessionDestination());
     }
     
+    /*
+        Envia un mensaje a una sesion en especifico.
+    */
     public void sendMessageSession(Message msg, Session session){
         msg.setTimestamp(LocalDateTime.now());
         String jsonMessage = new Gson().toJson(msg, Message.class);
@@ -185,8 +211,6 @@ public class ChatSessionHandler {
             message = jsonMessage;
         
         System.out.println("[DG - onSendMessageToSession PLAIN]: " + message);
-        
-        
         
         try{
             session.getBasicRemote().sendText(message);
@@ -207,7 +231,6 @@ public class ChatSessionHandler {
 
     void disableEncryption() {
         this.encryptionService.disableCipher();
-        
         
         //Notify to all session that the encryption is disabled.
         this.sendBroadcastSession(new Message(MessageHelper.DISABLE_ENCRYPTION, null, null, MessageHelper.OK_CODE)); 

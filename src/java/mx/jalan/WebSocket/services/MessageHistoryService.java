@@ -11,13 +11,16 @@ import java.util.Set;
 import java.util.stream.Collectors;
 import mx.jalan.Model.Message;
 import mx.jalan.Model.User;
-import javax.enterprise.context.ApplicationScoped;
+import javax.inject.Singleton;
 
 /**
  *
  * @author Ck
+ * 
+ * *Aun sin implementar*
+ * 
  */
-@ApplicationScoped
+@Singleton
 public class MessageHistoryService {
     
     private Set<Message> messages = new HashSet<>();

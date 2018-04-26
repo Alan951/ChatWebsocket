@@ -11,14 +11,9 @@ import com.google.gson.reflect.TypeToken;
 import mx.jalan.WebSocket.services.UserService;
 import java.io.IOException;
 import java.lang.reflect.Type;
-import java.nio.charset.Charset;
-import java.util.ArrayList;
-import java.util.HashMap;
 import java.util.List;
-import java.util.Map;
 import java.util.logging.Level;
 import java.util.logging.Logger;
-import javax.annotation.PostConstruct;
 import javax.enterprise.context.ApplicationScoped;
 import javax.inject.Inject;
 import javax.websocket.CloseReason;
@@ -31,8 +26,6 @@ import javax.websocket.server.ServerEndpoint;
 import mx.jalan.Model.EncryptionAlgorithm;
 import mx.jalan.Model.User;
 import mx.jalan.Model.Message;
-import mx.jalan.Security.CipherBase;
-import mx.jalan.Security.EncryptionAlgorithms;
 import mx.jalan.Utils.JsonUtils;
 import mx.jalan.WebSocket.services.EncryptionService;
 
@@ -79,6 +72,31 @@ public class ChatWebSocketServer {
         Logger.getLogger(ChatWebSocketServer.class.getName()).log(Level.SEVERE, null, error);
     }
     
+    /*
+     *  Todos los mensajes que sean recibidos a traves del websocket
+     *      pasaran por este metodo y seran enrutados a su función correspondiente.
+     *  @param strMessage Es el string del mensaje debera de ser un JSON, se serializara en objeto Message y
+            en caso de que esto no sea posible, solo existen 2 razones
+                1) No es un json correctamente formado 
+                2) Es un json cifrado.
+            Intentara descifrar solo si existe un algoritmo activo y en caso de no ser posible
+            el mensaje sera desechado.
+        @param session Es un objecto de tipo Session el cual es utilizado para enviar mensajes
+            a una session. El modelo Usuario tiene una propiedad de su Session, por lo tanto
+            cada usuario del chat tiene su objeto Session el cual lo utiliza el servidor para enviar
+            mensajes al usuario..
+    
+        El json que se utiliza para la comunicación cliente - servidor es el mismo en todos los casos por lo tanto,
+            tanto el cliente como el servidor siempre estan esperando un json o un json cifrado.
+        Se puede consultar el modelo en mx.jalan.Model.Message.
+        Las propiedades "transient" no son serializadas por lo tanto cuando el objeto Message se convierte
+            en un json las propiedades transient no son incluidas en el json. Estas propiedades son uso
+            de la app para enrutar los mensajes y personalizar su envio (por ejemplo, si se tiene que serializar, bajo que cifrado lo tiene que hacer, etc).
+        Para enrutar los mensajes se utiliza la propiedad "action" del objeto Message. Dependiendo de la variable
+            action es lo que la aplicación hara con ese mensaje. Existe una clase con las constantes en mx.jalan.WebSocket.MessageHelper.
+        TODO: En que casos las notificaciones del servidor al cliente seran cifrados si existe un metodo criptografio activo
+            y en que casos aunque exista un metodo criptografico activo seran enviados en texto plano.
+     */
     @OnMessage
     public void handleMessage(String strMessage, Session session)throws IOException{
         //this.sessionHandler.sendUnicastSession(new Message(MessageHelper.SIMPLE_MESSAGE, "Aikabrown, Traes el omnitracks!", this.encryptionActive, MessageHelper.OK_CODE), session);
@@ -90,18 +108,21 @@ public class ChatWebSocketServer {
         if(JsonUtils.isJsonObject(strMessage)){ //Si strMessage es json
             message = new Gson().fromJson(strMessage, Message.class);
             System.out.println("[DG - OnMessage]: "+message);
-        }else{ //Probablemente sea un mensaje cifrado.
+        }else{ //Probablemente sea un json - message cifrado.
             System.out.println("[DG - Verify Encryption with]: " + this.encryptionService.getCipher());
             System.out.println("[DG - OnMessage Encrypted?]: "+strMessage);
+            
+            if(this.encryptionService.getCipher() == null) //No existe metodo criptografico configurado
+                return; //Desechar mensaje.
             
             String msgDecoded = this.encryptionService.getCipher().decode(strMessage);
             
             System.out.println("[DG - OnMessage Decrypted?]: "+msgDecoded);
             
-            if(JsonUtils.isJsonObject(msgDecoded)){
+            if(JsonUtils.isJsonObject(msgDecoded)){ //Json descifrado.
                 message = new Gson().fromJson(msgDecoded, Message.class);
                 System.out.println("[DG - OnMessage Decrypted]: "+message);
-            }else{
+            }else{ //Mensaje extraño desechado.
                 return;
             }
         }
@@ -110,13 +131,14 @@ public class ChatWebSocketServer {
             case MessageHelper.NEW_USER_MESSAGE:                
                 //Verificar si existe usuario
                 if(userService.existsUser(message.getUserSource().getNombre()) != null){
-                    //sessionHandler.createErrorMessage(); //Falta modificar
+                    //Enviar un mensaje al usuario que el username que escogio ya esta siendo usado.
                     sessionHandler.sendUnicastSession(
                             MessagesConstructor
                                     .constructErrorMessage("El nombre de usuario que escogiste ya esta ocupado.", 
                                             session, 
                                             MessageHelper.USERNAME_UNAVAILABLE_CODE)
-                                    .setEncryptProps(this.encryptionService.cipherActive() ? this.encryptionService.getEncryptionAlgorithmEnabled() : null) // SET ENCRYPTION PROPS
+                                    //
+                                    //.setEncryptProps(this.encryptionService.cipherActive() ? this.encryptionService.getEncryptionAlgorithmEnabled() : null) // SET ENCRYPTION PROPS
                     );
                     
                     session.close(new CloseReason(CloseReason.CloseCodes.CANNOT_ACCEPT, "USER EXISTS"));
@@ -184,18 +206,8 @@ public class ChatWebSocketServer {
                             this.encryptionService.cipherActive() ? MessageHelper.OK_CODE : MessageHelper.NOT_FOUND_CODE),
                         session);
             default:
-                //TODO: Respond error action unknown
+                //TODO: Respond error unknown action
                 System.out.println("[DG - Action unknown]");
         }
-    }
-    
-    /*
-        All Algorithm supported is declared here.
-    */
-    @PostConstruct
-    public void initEncryption(){
-        System.out.println("postconstruct called");
-        Map<String, String> syncProp = new HashMap<String, String>();
-        syncProp.put("key", "");
     }
 }
