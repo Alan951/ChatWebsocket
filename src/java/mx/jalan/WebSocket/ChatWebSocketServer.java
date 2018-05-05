@@ -196,6 +196,8 @@ public class ChatWebSocketServer {
                 }
                 
                 this.sessionHandler.disableEncryption();
+                
+                sessionHandler.sendBroadcastSession(MessagesConstructor.constructNotifyDisableEncryptionMessage());
                 break;
             case MessageHelper.CHECK_ENCRYPTION:
                 sessionHandler.sendUnicastSession(

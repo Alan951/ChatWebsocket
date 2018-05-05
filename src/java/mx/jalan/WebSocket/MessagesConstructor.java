@@ -47,4 +47,9 @@ public class MessagesConstructor {
         return new Message(MessageHelper.ENABLE_ENCRYPTION,
                 encryption.getAlgorithm(), null, MessageHelper.OK_CODE);
     }
+    
+    public static Message constructNotifyDisableEncryptionMessage(){
+        return new Message(MessageHelper.DISABLE_ENCRYPTION,
+                null, null, MessageHelper.OK_CODE);
+    }
 }
