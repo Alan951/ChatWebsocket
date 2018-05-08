@@ -190,7 +190,7 @@ public class ChatWebSocketServer {
             case MessageHelper.REQ_DISABLE_ENCRYPTION:
                 System.out.println("[DG - DisableEncryption]: ");
                 
-                if(this.encryptionService.cipherActive()){
+                if(!this.encryptionService.cipherActive()){
                     //TODO SEND ERROR BECAUSE ENCRYPTION NOT SETTED YET.
                     return;
                 }

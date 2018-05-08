@@ -41,6 +41,11 @@ public class EncryptionService {
                syncProp));
     }
     
+    /*
+        El objeto que le envies por parametro
+        verifica si esta en la lista de metodos de cifrados que 
+        soporta la aplicacion.
+    */
     private EncryptionAlgorithm encryptionExists(EncryptionAlgorithm encryption){
         EncryptionAlgorithm encryptionExists = null;
         
@@ -90,6 +95,7 @@ public class EncryptionService {
     public void disableCipher(){
         this.cipher = null;
         this.encryptionAlgorithmEnabled = null;
+        System.out.println("[DG - OnDisableCipher]: OK");
     }
     
     public void setEncryptionAlgorithmEnabled(EncryptionAlgorithm encryption){
