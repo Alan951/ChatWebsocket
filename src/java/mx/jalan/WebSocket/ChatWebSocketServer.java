@@ -74,8 +74,8 @@ public class ChatWebSocketServer {
     
     /*
      *  Todos los mensajes que sean recibidos a traves del websocket
-     *      pasaran por este metodo y seran enrutados a su función correspondiente.
-     *  @param strMessage Es el string del mensaje debera de ser un JSON, se serializara en objeto Message y
+           pasaran por este metodo y seran enrutados a su función correspondiente.
+        @param strMessage Es el string del mensaje debera de ser un JSON, se serializara en objeto Message y
             en caso de que esto no sea posible, solo existen 2 razones
                 1) No es un json correctamente formado 
                 2) Es un json cifrado.
@@ -109,7 +109,7 @@ public class ChatWebSocketServer {
             message = new Gson().fromJson(strMessage, Message.class);
             System.out.println("[DG - OnMessage]: "+message);
         }else{ //Probablemente sea un json - message cifrado.
-            System.out.println("[DG - Verify Encryption with]: " + this.encryptionService.getCipher());
+            System.out.println("[DG - Verify Encryption with]: " + this.encryptionService.getCipher().getCipherName());
             System.out.println("[DG - OnMessage Encrypted?]: "+strMessage);
             
             if(this.encryptionService.getCipher() == null) //No existe metodo criptografico configurado

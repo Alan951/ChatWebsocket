@@ -16,7 +16,7 @@ import javax.websocket.Session;
 import mx.jalan.Model.EncryptionAlgorithm;
 import mx.jalan.Model.User;
 import mx.jalan.Model.Message;
-import mx.jalan.Security.CipherBase;
+import mx.jalan.Security.Algorithms.CipherBase;
 import mx.jalan.Security.CipherFactory;
 import mx.jalan.Security.EncryptionAlgorithms;
 import mx.jalan.WebSocket.services.EncryptionService;

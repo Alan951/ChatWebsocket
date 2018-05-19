@@ -5,7 +5,7 @@
  */
 
 import java.io.Serializable;
-import mx.jalan.Security.CipherBase;
+import mx.jalan.Security.Algorithms.CipherBase;
 import mx.jalan.Security.CipherFactory;
 import mx.jalan.Security.EncryptionAlgorithms;
 import org.junit.After;

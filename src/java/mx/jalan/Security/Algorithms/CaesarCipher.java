@@ -4,7 +4,6 @@ import java.io.Serializable;
 import java.util.Base64;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
-import mx.jalan.Security.CipherBase;
 import org.apache.commons.lang3.math.NumberUtils;
 
 public class CaesarCipher<T, KT extends Serializable> implements CipherBase<T, KT>{

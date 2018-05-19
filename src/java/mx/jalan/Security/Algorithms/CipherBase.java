@@ -1,4 +1,4 @@
-package mx.jalan.Security;
+package mx.jalan.Security.Algorithms;
 
 import java.io.Serializable;
 

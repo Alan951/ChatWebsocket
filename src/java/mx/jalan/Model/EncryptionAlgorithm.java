@@ -16,11 +16,13 @@ public class EncryptionAlgorithm {
     private String algorithm;
     private int algorithmType;
     private Map<String, String> properties;
+    private transient Class<?> keyType;
 
-    public EncryptionAlgorithm(String algorithm, int algorithmType, Map<String, String> properties) {
+    public EncryptionAlgorithm(String algorithm, int algorithmType, Map<String, String> properties, Class<?> keyType) {
         this.algorithm = algorithm;
         this.algorithmType = algorithmType;
         this.properties = properties;
+        this.keyType = keyType;
     }
     
     public EncryptionAlgorithm(String algorithm, int algorithmType){
@@ -52,11 +54,17 @@ public class EncryptionAlgorithm {
         this.properties = properties;
     }
 
+    public Class<?> getKeyType() {
+        return keyType;
+    }
+
+    public void setKeyType(Class<?> keyType) {
+        this.keyType = keyType;
+    }
+
     @Override
     public String toString() {
-        return "EncryptionProperties{" + "algorithm=" + algorithm + ", algorithmType=" + algorithmType + ", properties=" + properties + '}';
+        return "EncryptionAlgorithm{" + "algorithm=" + algorithm + ", algorithmType=" + algorithmType + ", properties=" + properties + ", keyType=" + keyType + '}';
     }
-    
-    
     
 }

@@ -11,9 +11,10 @@ import java.util.List;
 import java.util.Map;
 import javax.inject.Singleton;
 import mx.jalan.Model.EncryptionAlgorithm;
-import mx.jalan.Security.CipherBase;
+import mx.jalan.Security.Algorithms.CipherBase;
 import mx.jalan.Security.CipherFactory;
 import mx.jalan.Security.EncryptionAlgorithms;
+import mx.jalan.Utils.KeyUtils;
 
 /**
  *
@@ -37,8 +38,15 @@ public class EncryptionService {
         this.encryptionAlgorithmsSupport = new ArrayList<EncryptionAlgorithm>();
         
         this.encryptionAlgorithmsSupport.add(new EncryptionAlgorithm(EncryptionAlgorithms.CAESAR, 
-               EncryptionAlgorithms.SYNC_CIPHER, 
-               syncProp));
+                EncryptionAlgorithms.SYNC_CIPHER, 
+                syncProp,
+                Long.class
+        ));
+        this.encryptionAlgorithmsSupport.add(new EncryptionAlgorithm(EncryptionAlgorithms.DES, 
+                EncryptionAlgorithms.SYNC_CIPHER,
+                syncProp,
+                String.class
+        ));
     }
     
     /*
@@ -65,16 +73,26 @@ public class EncryptionService {
         if(encryption == null) //Encryption no existe
             return false;
         
-        System.out.println("[DG] Habilitando metodo criptografico");
+        System.out.println("[DG] Habilitando metodo criptografico: "+encryption);
         
         if(encryption.getAlgorithmType() == EncryptionAlgorithms.SYNC_CIPHER){
-            //validate if is long data type
-            Long key = Long.parseLong(encryptionReq.getProperties().get("key"));
+                        
+            if(encryption.getKeyType() == Long.class){
+                CipherBase<String, Long> cipher = new CipherFactory().getCipher(encryption.getAlgorithm());
+                String checkKey = encryptionReq.getProperties().get("key");
+                if(KeyUtils.isValidKey(checkKey, encryption)){
+                    cipher.setKey(KeyUtils.getLongKey(checkKey));
+                    setCipher(cipher);
+                }
+            }else if(encryption.getKeyType() == String.class){
+                CipherBase<String, String> cipher = new CipherFactory().getCipher(encryption.getAlgorithm());
+                String checkKey = encryptionReq.getProperties().get("key");
+                if(KeyUtils.isValidKey(checkKey, encryption)){
+                    cipher.setKey(KeyUtils.getStringKey(checkKey));
+                    setCipher(cipher);
+                }
+            }
             
-            CipherBase<String, Long> cipher = new CipherFactory().getCipher(encryption.getAlgorithm());
-            cipher.setKey(key);
-            
-            setCipher(cipher);
             
         }else if(encryption.getAlgorithmType() == EncryptionAlgorithms.ASYNC_CIPHER){
             Long publicKey = Long.parseLong(encryptionReq.getProperties().get("publicKey"));
@@ -111,6 +129,7 @@ public class EncryptionService {
     }
     
     public void setCipher(CipherBase cipher){
+        System.out.println("[DG - EncryptionService]: Cipher setted");
         this.cipher = cipher;
     }
     
